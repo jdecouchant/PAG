@@ -1,0 +1,17 @@
+version 2
+run _1000nodes_w7_144p-0-20150402-08:27:06-9437
+attr configname _1000nodes_w7_144p
+attr datetime 20150402-08:27:06
+attr experiment _1000nodes_w7_144p
+attr inifile CBR_advanced.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network CBR_advanced_Network_1000
+attr processid 9437
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+

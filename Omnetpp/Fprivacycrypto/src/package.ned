@@ -1,0 +1,3 @@
+package fprivacycrypto;
+
+@license(LGPL);

@@ -1,0 +1,17 @@
+version 2
+run _1000nodes_w3_70updates-0-20150505-14:16:49-27172
+attr configname _1000nodes_w3_70updates
+attr datetime 20150505-14:16:49
+attr experiment _1000nodes_w3_70updates
+attr inifile CBR_advanced.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network CBR_advanced_Network_1000
+attr processid 27172
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+

@@ -1,0 +1,17 @@
+version 2
+run _1000nodes_f3_w3_40-0-20151116-14:30:15-25494
+attr configname _1000nodes_f3_w3_40
+attr datetime 20151116-14:30:15
+attr experiment _1000nodes_f3_w3_40
+attr inifile CBR_advanced.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network CBR_advanced_Network_1000
+attr processid 25494
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+

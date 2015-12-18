@@ -1,0 +1,17 @@
+version 2
+run _250nodes_f2_w5_40-0-20150403-15:57:36-17733
+attr configname _250nodes_f2_w5_40
+attr datetime 20150403-15:57:36
+attr experiment _250nodes_f2_w5_40
+attr inifile CBR_advanced.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network CBR_advanced_Network_1000
+attr processid 17733
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+
