@@ -1,0 +1,445 @@
+(*
+Using proverif1.90, this file can been used to prove that a protocol based on homomorphic encryption aiming to disseminate content in a P2P session is sound.
+
+To run the prover using this file:
+
+Download and install proverif from http://prosecco.gforge.inria.fr/personal/bblanche/proverif/
+Run ./proverif privategossip.pv
+*)
+
+(*
+
+We represent the reception of updates u1, u2, and u3 from nodes A1, A2, A3 by node B.
+Node B then forwards these updates to node C.
+Each node A1, A2, A3, and C has a witness, respectively WA1, WA2, WA3, WC.
+Node B has three witnesses: WB1, WB2, and WB3.  
+
+In the following we represent the phases of the protocol, and the associated messages. 
+{X}skY is the signature of X using the private key of Y
+{X}pkY is the encryption of X using the public key of Y
+
+   B sends prime numbers to A1, A2 and A3
+Message 1: B -> A1: { { p1 }skB }pkA1
+Message 2: B -> A2: { { p2 }skB }pkA2
+Message 3: B -> A3: { { p3 }skB }pkA3
+
+   A1, A2, A3 reply with one update and an integer value to B
+Message 4: A1 -> B: { { u1, NA1 }skA1 }pkB
+Message 5: A2 -> B: { { u2, NA2 }skA2 }pkB
+Message 6: A3 -> B: { { u3, NA3 }skA3 }pkB
+
+   A1, A2, A3 joins attestations to B
+Message 7: A1 -> B: { { u1 }p1 }skA1
+Message 8: A2 -> B: { { u2 }p2 }skA2
+Message 9: A3 -> B: { { u3 }p3 }skA3
+
+   B forwards to C, and obtains an ack 
+Message 10: C -> B: { { p4 }skC }pkB
+Message 11: B -> C: { { u1, u2, u3, p1.p2.p3 }skB }pkC
+Message 12: C -> B: { { u1.u2.u3}p1.p2.p3 }skC
+
+   B acks the updates to A1, A2, A3 
+Message 13: B -> A1: { {u1}NA1 }skB
+Message 14: B -> A2: { {u2}NA2 }skB
+Message 15: B -> A3: { {u3}NA3 }skB
+
+   B acks the updates to its witnesses 
+Message 16: B -> WB1: { {u1}NA1 }skB
+Message 17: B -> WB2: { {u2}NA2 }skB
+Message 18: B -> WB3: { {u3}NA3 }skB
+
+   B sends an attestation to its witnesses
+Message 19: B -> WB1: { { { u1 }p1 }skA1, p2.p3 }skB
+Message 20: B -> WB2: { { { u2 }p2 }skA2, p1.p3 }skB
+Message 21: B -> WB3: { { { u3 }p3 }skA3, p1.p2 }skB
+
+   Broadcasts from WB1, WB2, or WB3 to WB
+Message 27: WB1 -> WB: { { u1 }p1.p2.p3}skWB1
+Message 28: WB2 -> WB: { { u2 }p1.p2.p3}skWB2
+Message 29: WB3 -> WB: { { u3 }p1.p2.p3}skWB3
+
+   Ack transfer from WB to WA1, WA2, WA3
+Message 22: WB1 -> WA1: { {u1}NA1 }skB
+Message 23: WB2 -> WA2: { {u2}NA2 }skB
+Message 24: WB3 -> WA3: { {u3}NA3 }skB
+
+   Ack from C to its witness WC
+Message 25: C -> WC: { {u1.u2.u3}p1.p2.p3 }skC
+
+   Transfer of ack from WC to WB
+Message 26: WC -> WB: { {u1.u2.u3}p1.p2.p3 }skC
+*)
+
+
+
+(* Setting maxDepth and maxHype is necessary because of the homomorphism 
+operations that the prover uses to generate a lot of rules when the attacker is active *)
+
+set maxDepth = 8. 
+set maxHyp = 6.
+
+(* Can be used to prove the security if the attacker is assumed to be passive *)
+
+(*set attacker = passive.*) 
+
+
+free c: channel.
+
+type host.
+type pkey.
+type skey.
+type msg.
+
+(* Public key encryption and decryption *)
+
+fun pk(skey): pkey.
+fun encrypt(bitstring, pkey): bitstring.
+reduc forall x: bitstring, y: skey; decrypt(encrypt(x,pk(y)),y) = x.
+
+(* Encryption using a prime number *)
+fun hashPrime(bitstring, bitstring): bitstring.
+
+fun product(bitstring, bitstring): bitstring.
+
+reduc forall x: bitstring, y: bitstring; divide(product(x,y),y) = x.
+reduc forall x: bitstring, y: bitstring; permute(product(x,y)) = product(y,x).
+
+reduc forall p: bitstring, q: bitstring, r: bitstring; simp(product(p,q), product(r,q), product(r, p)) = p. 
+
+(* The encryptions using the prime numbers have homomorphic properties that the prover can use. *)
+reduc forall x:bitstring, p1:bitstring, p2:bitstring; homo1(hashPrime(x, p1), p2) = hashPrime(x, product(p1, p2)).
+reduc forall x:bitstring, y:bitstring, p:bitstring; homo2(hashPrime(x,p), hashPrime(y,p)) = hashPrime(product(x,y), p). 
+
+
+(* Signatures *)
+
+fun spk(skey): pkey.
+fun sign(bitstring, skey): bitstring.
+reduc forall x: bitstring, y: skey; verif(sign(x,y), pk(y), x) = true.
+reduc forall x: bitstring, y: skey; getmess(sign(x,y)) = x.
+
+(* Host names *)
+
+free A1, A2, A3, B, C, WA1, WA2, WA3, WB, WB1, WB2, WB3, WC: host.
+free attestation, ack: msg.
+
+(* The updates, prime numbers or numbers that the protocol uses, and that are private. *)
+
+free u1, u2, u3, NA1, NA2, NA3: bitstring [private].
+free p1, p2, p3: bitstring [private].
+
+
+(* Role of A1, A2, A3 *)
+
+let processInitiatorA(hostA: host, skA: skey, pkB: pkey, u: bitstring, NA: bitstring) =   
+   (* 1,2,3 : B -> A1: { { p1 }skB }pkA1 *) (* receive prime number *)
+   in(c, (=hostA, m : bitstring));
+   
+   let m1 = decrypt(m, skA) in
+   let p = getmess(m1) in
+   if verif(m1, pkB, p) = true then 
+      (* 4,5,6 : A1 -> B: { { u1, NA1 }skA1 }pkB *)
+      out(c, (B, encrypt(sign((u, NA), skA), pkB))); (* serve *)
+      (* 7,8,9 : A1 -> B: { { u1 }p1 }skA1 *)
+      out(c, (B, sign((attestation, hashPrime(u, p)), skA)));  (* attestation *)
+      
+      in(c, (=hostA, m2 : bitstring)); (* receive ack *)
+      
+      let (=ack, =hostA, n2: bitstring) = getmess(m2) in
+      if verif(m2, pkB, (ack, hostA, n2)) = true then
+         0
+      else
+         0
+   else 
+      0.
+
+(* Role of node B which receives u1 from A1, u2 from A2, u3 from A3
+and forwards these updates to node C. It also sends messages to its witnesses. *)
+
+let processInitiatorB(skB: skey, pkA1: pkey, pkA2: pkey, pkA3: pkey, pkC: pkey, pkWB1: pkey, pkWB2: pkey, pkWB3: pkey) =   
+   (* 1, 2, 3: B -> A1: { { p1 }skB }pkA1 *)
+   out(c, (A1, encrypt( sign(p1, skB), pkA1) ));
+   out(c, (A2, encrypt( sign(p2, skB), pkA2) ));
+   out(c, (A3, encrypt( sign(p3, skB), pkA3) ));
+   
+   (* serve messages *)
+   (* 4, 5, 6: A1 -> B: { { u1, NA1 }skA1 }pkB *)
+   in(c, (=B, m4: bitstring)); 
+   in(c, (=B, m5: bitstring));
+   in(c, (=B, m6: bitstring));
+   
+   let n4 = decrypt(m4, skB) in
+   let (u10: bitstring, NA10: bitstring) = getmess(n4) in
+   let n5 = decrypt(m5, skB) in
+   let (u20: bitstring, NA20: bitstring) = getmess(n5) in
+   let n6 = decrypt(m6, skB) in
+   let (u30: bitstring, NA30: bitstring) = getmess(n6) in
+   if verif(n4, pkA1, (u10, NA10)) = true && verif(n5, pkA2, (u20, NA20)) = true && verif(n6, pkA3, (u30, NA30)) = true then
+      (* 7, 8, 9: A1 -> B: { { u1 }p1 }skA1 *)
+      in(c, (=B, m7: bitstring));
+      in(c, (=B, m8: bitstring));
+      in(c, (=B, m9: bitstring));
+
+      let (=attestation, n7: bitstring) = getmess(m7) in
+      let (=attestation, n8: bitstring) = getmess(m8) in
+      let (=attestation, n9: bitstring) = getmess(m9) in
+      if verif(m7, pkA1, (attestation, n7)) = true && verif(m8, pkA2, (attestation,n8)) = true && verif(m9, pkA3, (attestation,n9)) = true then      
+         (* 13, 14, 15: B -> A1: { {u1}NA1 }skB *) (* ack from B to A *)
+         out(c, (A1, sign((ack, A1, hashPrime(u10, NA10)) , skB)));
+         out(c, (A2, sign((ack, A2, hashPrime(u20, NA20)) , skB)));         
+         out(c, (A3, sign((ack, A3, hashPrime(u30, NA30)) , skB))); 
+
+         
+         (* 16, 17, 18 : B -> WB: { {u1}NA1 }skB *) (* ack from B to WB, and later WA *) 
+         out(c, (WB1, sign((ack, A1, hashPrime(u10, NA10)) , skB)));
+         out(c, (WB2, sign((ack, A2, hashPrime(u20, NA20)) , skB)));         
+         out(c, (WB3, sign((ack, A3, hashPrime(u30, NA30)) , skB)));
+         
+                        
+         (* 19, 20, 21: B -> WB: { { { u1 }p1 }skA1, p2.p3 }skB *) (* forward attestation received from A, to WB *)        
+         out(c, (WB1, encrypt(sign( (A1, m7, product(p2,p3)), skB), pkWB1)));
+         out(c, (WB2, encrypt(sign( (A2, m8, product(p1,p3)), skB), pkWB2)));
+         out(c, (WB3, encrypt(sign( (A3, m9, product(p1,p2)), skB), pkWB3))); 
+         
+         (* 10: C -> B: { { p4 }skC }pkB *) (* ack from C to B *)
+         in(c, (=B, m10: bitstring));
+         let n10 = decrypt(m10, skB) in
+         let p4 = getmess(n10) in
+         if verif(n10, pkC, p4) = true then 
+            out(c, (C, encrypt(sign( (u1, u2, u3, product(product(p1, p2), p3)), skB) ,pkC))); (* 11: B -> C: { { u1, u2, u3, p1.p2.p3 }skB }pkC *)
+            in(c, (=B, m12: bitstring))  (* 12: C -> B: { { u1.u2.u3}p1.p2.p3 }skC *)
+         else 
+            0
+
+      else
+         0
+   else
+      0.
+
+(* Node C, to which node B forwards the updates u1, u2, u3 *)
+
+let processInitiatorC(skC: skey, pkB: pkey) =
+   (* 10: C -> B: { { p4 }skC }pkB *)
+   new p4: bitstring;
+   out(c, (B, encrypt(sign(p4, skC), pkB)));
+
+   (* 11: B -> C: { { u1, u2, u3, p1.p2.p3 }skB }pkC *) (* serve to C *)
+   in(c, (=C, m11: bitstring));
+   let n11 = decrypt(m11, skC) in
+   let (u10: bitstring, u20: bitstring, u30: bitstring, p: bitstring) = getmess(n11) in
+   if verif(n11, pkB, (u10, u20, u30, p)) = true then
+      (* 12: C -> B: { { u1.u2.u3}p1.p2.p3 }skC *)
+      out(c, (B, sign(hashPrime(product(u10,product(u20, u30)), p), skC)));
+      
+      (* 25: C -> WC: { {u1.u2.u3}p1.p2.p3 }skC *)
+      out(c, (WC, sign(hashPrime(product(u10,product(u20, u30)), p), skC)))
+   else
+      0.
+   
+(* Witnesses of node B *)
+   
+let processInitiatorWB(hostWB: host, skWB: skey, pkB: pkey, pkC: pkey, pkWB1: pkey, pkWB2: pkey, pkWB3: pkey) = 
+   let myA = if hostWB=WB1 then A1 else if hostWB=WB2 then A2 else A3 in
+   let myWA = if hostWB=WB1 then WA1 else if hostWB=WB2 then WA2 else WA3 in
+
+   (* 16, 17, 18: B -> WB1: { {u1}NA1 }skB *)
+   in(c, (=hostWB, m16: bitstring));
+   let (=ack, =myA, n16: bitstring) = getmess(m16) in
+   
+   (* 22, 23, 24: WB1 -> WA1: { {u1}NA1 }skB *)
+   out(c, (myWA, m16));
+   
+   (* 19, 20, 21: B -> WB: { { { u1 }p1 }skA1, p2.p3 }skB *)
+   in(c, (=hostWB, m19: bitstring));
+   
+   let l19 = decrypt(m19, skWB) in
+   let (=myA, n19: bitstring, p23: bitstring) = getmess(l19) in
+   if verif(l19, pkB, (myA, n19, p23)) = true then
+      let (=attestation, o19: bitstring) = getmess(n19) in
+      (*let v1 = homo1(o19, p23) in*)
+      new v1 : bitstring;
+      
+      out(c, (WB, sign(v1, skWB))); (* Message 27, 28, 29: WB1 -> WB: { { u1 }p1.p2.p3}skWB1 *)
+      
+      in(c, (=WB, m27: bitstring));
+      in(c, (=WB, m28: bitstring));
+      in(c, (=WB, m29: bitstring));
+      let (n27: bitstring) = getmess(m27) in
+      let (n28: bitstring) = getmess(m28) in
+      let (n29: bitstring) = getmess(m29) in
+      if verif(m27, pkWB1, n27) = true 
+         && verif(m28, pkWB1, n28) = true 
+         && verif(m29, pkWB1, n29) = true then
+      
+         (* 26: WC -> WB: { {u1.u2.u3}p1.p2.p3 }skC *)
+         in(c, (=WB, m26: bitstring));
+      
+      
+         let n26 = getmess(m26) in
+         if verif(m26, pkC, n26) = true then
+            (* Homomorphic check -> verify the correct forwarding *)
+            (* let v4 = homo2(n27, homo2(n28, n29)) in
+            if n26 = v4 then
+               0  
+            else *)           
+               0
+         else
+            0
+      else
+         0
+   else
+      0.
+      
+let processInitiatorWC() =
+   (* 25: C -> WC: { {u1.u2.u3}p1.p2.p3 }skC *)
+   in(c, (=WC, m25: bitstring));
+   
+   (* 26: WC -> WB: { {u1.u2.u3}p1.p2.p3 }skC *)
+   out(c, (WB, m25)).
+   
+let processInitiatorWA(hostWA: host, pkB: pkey) =
+   (* 22, 23, 24 : WB -> WA1: { {u1}NA1 }skB *)
+   in(c, (=hostWA, m22: bitstring));
+   let n22 = getmess(m22) in
+   if verif(m22, pkB, n22) = true then
+      0
+   else
+      0.
+      
+      
+(* Secrecy assumptions -> To modify depending on the experiment. *)
+
+(*
+not attacker(new skA1). 
+not attacker(new skA2).
+*)
+not attacker(new skA3).
+not attacker(new skB).
+not attacker(new skC).
+   
+(* Declare what the attacker wants to obtain. *)
+query attacker(u3);
+      attacker(p3).
+   
+(* Start process *)
+
+process 
+   new skA1: skey; 
+   let pkA1 = pk(skA1) in
+   out(c, pkA1);
+   
+   new skA2: skey; 
+   let pkA2 = pk(skA2) in
+   out(c, pkA2);
+   
+   new skA3: skey; 
+   let pkA3 = pk(skA3) in
+   out(c, pkA3);
+   
+   new skB: skey; 
+   let pkB = pk(skB) in
+   out(c, pkB);
+   
+   new skC: skey; 
+   let pkC = pk(skC) in
+   out(c, pkC);
+   
+   new skWB1: skey;
+   let pkWB1 = pk(skWB1) in
+   out(c, pkWB1);
+   
+   new skWB2: skey;
+   let pkWB2 = pk(skWB2) in
+   out(c, pkWB2);
+   
+   new skWB3: skey;
+   let pkWB3 = pk(skWB3) in
+   out(c, pkWB3);
+   
+   (* Different attack and verification scenarios
+   to test one, uncomment the associated commands.
+   We consider coalitions of nodes that share their private keys,
+   and try to discover the content of the exchange between A3 and B. 
+   To do so, they must have access to u3 and p3, to check that 
+   hashPrime(u3, p3) is equal to their observation. *)
+   
+   out(c, u3);
+   
+   
+   (* Attack 1: 2 predecessors and 1 witness --> OK *)
+   
+   (*
+   out(c, skA1);
+   out(c, skA2);
+   out(c, skWB1); *) (* or WB2 *)
+   
+   (* Attack 2: 1 predecessor and 2 witnesses --> OK *)
+   
+   (*
+   out(c, skA1);
+   out(c, skWB1);
+   out(c, skWB2); *) (* or WB3 *)
+   
+   (* Attack 3: 3 witnesses (and someone who knows all the updates in the session) --> OK *)
+   
+   (*
+   out(c, skWB1);
+   out(c, skWB2);
+   out(c, skWB3);
+   *)
+   
+   (* Non-working attacks 1: 1 predecessor (who knows u3) and 1 witness, and a network listener --> OK *)
+   
+   (*
+   out(c, skA1);
+   out(c, skWB1);
+   *)
+   
+   (*
+   out(c, skA1);
+   out(c, skWB2);
+   *)
+   
+   (*
+   out(c, skA1);
+   out(c, skWB3);
+   *)
+
+   (* Non-working attack 2: 2 predecessors (that know u3) , and a network listener --> OK *)
+   
+   (*
+   out(c, skA1);
+   out(c, skA2);
+   *)
+   
+   (* Non-working attacks 3: 2 witnesses, someone who knows u3, and a network listener --> OK *)
+   
+   (*
+   out(c, skWB1);
+   out(c, skWB2);
+   *) 
+   
+   (*
+   out(c, skWB1);
+   out(c, skWB3);
+   *)
+   
+   out(c, skWB2);
+   out(c, skWB3);
+   
+   
+   (
+      (* Launch an unbounded number of sessions of the initiator *)
+      (!processInitiatorA(A1, skA1, pkB, u1, NA1))
+      | (!processInitiatorA(A2, skA2, pkB, u2, NA2)) 
+      | (!processInitiatorA(A3, skA3, pkB, u3, NA3)) 
+      | (!processInitiatorB(skB, pkA1, pkA2, pkA3, pkC, pkWB1, pkWB2, pkWB3)) 
+      | (!processInitiatorC(skC, pkB)) 
+      | (!processInitiatorWB(WB1, skWB1, pkB, pkC, pkWB1, pkWB2, pkWB3)) 
+      | (!processInitiatorWB(WB2, skWB2, pkB, pkC, pkWB1, pkWB2, pkWB3)) 
+      | (!processInitiatorWB(WB3, skWB3, pkB, pkC, pkWB1, pkWB2, pkWB3)) 
+      | (!processInitiatorWC()) 
+      | (!processInitiatorWA(WA1, pkB)) 
+      | (!processInitiatorWA(WA2, pkB))
+      | (!processInitiatorWA(WA3, pkB))
+   )
