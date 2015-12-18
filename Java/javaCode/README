@@ -1,0 +1,3 @@
+- Modify nodes.txt to specify which nodes you want to use to deploy the software on.
+- Run ./add_ports_to_nodes.py to configure the instances per node with their port address (usage described inside). 
+- 
