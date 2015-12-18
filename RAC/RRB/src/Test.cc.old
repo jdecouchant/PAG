@@ -1,0 +1,228 @@
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+// 
+
+#include "Test.h"
+#include<fstream>
+using namespace std;
+///*fonction intermediaire renvoyant vraie si a appartient au vecteur v*/
+bool App(int a, vector<int> v)
+{
+    for (size_t i = 0; i < v.size(); i++)
+        if (v[i] == a) return true;
+    return false;
+}
+
+static int id = 1;
+static vector<int> senders_id;
+bool last = true;
+static int nbNodes;
+ofstream fichier1("throughput.txt",ios::out|ios::app);
+ofstream fichier("latence.txt",ios::out|ios::app);
+static long double throughput_sum = 0;
+static long double latency_sum = 0;
+static int counter = 0;
+Define_Module(Test);
+
+void Test::initialize(int stage)
+{
+    if(stage!=4)
+        return;
+    nbMsgDL = 0;
+    nbBitsRcvd = 0;
+    nbSender = par("nbSender");
+    msgSize = par("msgSize");
+
+
+    startTime = par("startTime");
+
+    throughtput = 0;
+    latency = 0;
+    nbMsgRcvd_per_sender = 0;
+
+    period = new cMessage("period");
+    scheduleAt((simtime_t)startTime,period);
+    //counter = 0;
+    //node_ids.push_back(getParentModule()->getId());
+    /*construction de la liste des senders*/
+    if((int)senders_id.size()!=nbSender)
+        senders_id.push_back(getParentModule()->getIndex());
+
+    //    if(App(getParentModule()->getIndex(),senders_id))
+    //    {
+    //        RRBmsg* m = createMessage();
+    //        sendMessage(m);
+    //
+    //    }
+}
+
+
+void Test::handleMessage(cMessage* msg)
+{
+    if(msg->isSelfMessage()) {
+        //if(App(getParentModule()->getIndex(),senders_id))
+        if(getParentModule()->getIndex()==0) {
+            RRBmsg* m = createMessage();
+            sendMessage(m);
+        }
+
+        scheduleAt(simTime()+(simtime_t)startTime,msg);
+    } else {
+
+        RRBmsg* m = check_and_cast<RRBmsg*>(msg);
+        receiveMessage(m);
+        //if(m->getOrigine().node_id==getParentModule()->getIndex())
+        {
+            sTime = m->getSendTime();
+            eTime = m->getRecepTime();
+            //latency = eTime - sTime;
+            //        timeHop val;
+            //        val.time = (eTime - sTime)/(m->getHopCount()+1);
+            //        val.hop = m->getHopCount()+1;
+            //latency_per_msg[m->getRRBmsg_id()] = (eTime - sTime);//(m->getHopCount()+1);;
+            nbMsgRcvd_per_sender++;
+            latency = latency + (eTime - sTime).dbl();
+            //on envoie un autre
+            RRBmsg* mess = createMessage();
+            sendMessage(mess);
+        }
+        delete m;
+
+    }
+    //    if(msg->isSelfMessage())
+    //    {
+    //        RRBmsg* m = createMessage();
+    //        sendMessage(m);
+    //
+    //    }
+    //    else
+    //    {
+    //
+    //
+    //        //RRBmsg* m = check_and_cast<RRBmsg*>(msg);
+    //        //        if(App(getParentModule()->getIndex(),senders_id))
+    //        //        {
+    //        RRBmsg* m = check_and_cast<RRBmsg*>(msg);
+    //        sTime = m->getSendTime();
+    //        eTime = m->getRecepTime();
+    //        //latency = eTime - sTime;
+    //        //            timeHop val;
+    //        //            val.time = (eTime - sTime)/(m->getHopCount()+1);
+    //        //            val.hop = m->getHopCount()+1;
+    //        //            latency_per_msg[m->getRRBmsg_id()] = val;
+    //        nbMsgRcvd_per_sender++;
+    //        latency = latency + (eTime - sTime).dbl()/(m->getHopCount()+1);
+    //        //on envoie un autre
+    //        RRBmsg* mess = createMessage();
+    //        sendMessage(mess);
+    //        delete m;
+    //        //        }
+    //        //delete m;
+    //    }
+
+}
+
+void Test::finish() {
+    double duration = (simTime() - simulation.getWarmupPeriod()).dbl();
+    throughtput = nbBitsRcvd/duration;
+    throughput_sum = throughput_sum + throughtput;
+    ev <<"=================\n";
+    ev << "Node = "<<getParentModule()->getIndex()<<"\n";
+    ev <<"nbMsgDL = "<<nbMsgDL<<"\n";
+    ev <<"nbBitsRcvd = "<<nbBitsRcvd<<"\n";
+    ev <<"Throughput = "<<throughtput<<"\n";
+    ev <<"sTime = "<<sTime<<"\n";
+    ev <<"eTime = "<<eTime<<"\n";
+    ev <<"Latency = "<<latency<<"\n";
+
+    //if(App(getParentModule()->getIndex(),senders_id))
+    //if(nbMsgRcvd_per_sender!=0)
+    //    if(latency_per_msg.size()!=0)
+    //    {
+    //        double s = 0;
+    //        for(map<int,simtime_t>::iterator it=latency_per_msg.begin();it!=latency_per_msg.end();it++)
+    //        {
+    //            //s = s + ((it->second).time).dbl();
+    //            s = s + (it->second).dbl();
+    //            //ev <<it->first<<" "<<it->second.time<<" "<<it->second.hop<<"\n";
+    //            ev <<it->first<<" "<<it->second<<"\n";
+    //        }
+    //        double m = s/latency_per_msg.size();
+    //        //            ev <<"Mean Latency = "<<m<<"\n";
+    //        //
+    //        //
+    //        //            ev <<"=================\n";
+    //
+    //        //somme = somme + throughtput;
+    //        //latence = latence + m;
+    //        latency_sum = latency_sum + m;
+    latency_sum = latency_sum + latency/nbMsgRcvd_per_sender;
+    //        counter++;
+    //
+    //    }
+    //latency_sum = latency_sum + latency/nbMsgRcvd_per_sender;
+    if(last)
+    {
+        nbNodes = getParentModule()->getSubmodule("RRB")->par("nbNodes");
+        last = false;
+    }
+    //if(getParentModule()->getIndex()==nbNodes-1)
+    {
+        long double average_throughput = throughput_sum/nbNodes;
+        //long double average_latency = latency_sum/counter;
+        long double average_latency = latency_sum/nbNodes;
+        fichier1 << nbNodes <<" "<<average_throughput<<"\n";
+        fichier << nbNodes <<" "<<average_latency<<"\n";
+        fichier.close();
+        fichier1.close();
+    }
+
+}
+
+RRBmsg* Test::createMessage()
+{
+    RRBmsg* m = new RRBmsg("MessageTest");
+    Node n;
+    n.node_id = getParentModule()->getIndex();
+    //n.address = IPAddressResolver().addressOf(getParentModule(),IPAddressResolver().ADDR_IPv4);
+    m->setOrigine(n);
+    m->setSrc(n);
+    m->setRRBmsg_id(id);
+    m->setByteLength(msgSize);
+    id++;
+    return m;
+}
+
+void Test::sendMessage(RRBmsg* msg)
+{
+    ev <<"===============\n";
+    ev <<"Start to send message  with ID = "<<msg->getRRBmsg_id()<<" ......\n";
+    ev <<"===============\n";
+    send(msg,"appOut");
+}
+
+void Test::receiveMessage(RRBmsg* msg) {
+    if(simTime() >= simulation.getWarmupPeriod()) {
+        updateStats(msg);
+    }
+
+    //delete msg;
+}
+
+void Test::updateStats(RRBmsg* msg)
+{
+    nbMsgDL++;
+    nbBitsRcvd+=msg->getBitLength();
+}
+

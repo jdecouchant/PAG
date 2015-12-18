@@ -1,0 +1,29 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(src/net/inet.cc)
+AM_INIT_AUTOMAKE(transports, 1.0.2)
+LT_INIT
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AM_PROG_AS
+AC_PROG_LIBTOOL
+AC_LANG_CPLUSPLUS
+AC_CHECK_LIB(crypto,main,,AC_MSG_ERROR(Cannot find libcrypto))
+AC_CHECK_LIB(peerreview,main,,AC_MSG_ERROR(Cannot find libpeerreview),-lcrypto)
+AC_CHECK_LIB(esign,main,[GOT_ESIGN=1],[GOT_ESIGN=0],-lgmp)
+AC_CONFIG_MACRO_DIR([m4])
+
+AM_CONDITIONAL(MAKE_LIBESIGNXP, test "x$GOT_ESIGN" == "x1")
+
+dnl Remove generated Makefiles wthen doing maintainer-clean.
+MAINTAINERCLEANFILES="$MAINTAINERCLEANFILES Makefile.in"
+AC_SUBST(MAINTAINERCLEANFILES)
+
+dnl Always include top level includes.
+CPPFLAGS="$CPPFLAGS -I\$(top_srcdir)/include/"
+AC_SUBST(CPPFLAGS)
+
+dnl Modified files.
+AC_OUTPUT(Makefile src/Makefile include/Makefile)

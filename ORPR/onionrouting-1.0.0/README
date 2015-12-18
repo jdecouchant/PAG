@@ -1,0 +1,57 @@
+This archive contains example code for libpeerreview. The code implements
+a simple multicast application, where each node is required to forward
+the packets it receives to a certain set of other nodes. 
+
+   1. Build and install libparameters, libpeerreview, and transports.
+   
+         tar xzf libparameters-1.0.0.tgz
+         (cd libparameters-1.0.0; ./configure; make install)
+         tar xzf libpeerreview-1.0.9.tgz
+         (cd libpeerreview-1.0.9; ./configure; make install)
+         tar xzf transports-1.0.2.tgz
+         (cd transports-1.0.2; ./configure; make install)
+         
+   2. Build the multicast application:
+   
+         tar xzf multicast-1.0.0.tgz
+         cd multicast-1.0.0
+         ./configure
+         make
+         
+   3. Generate certificates for the nodes
+   
+         ../transports-1.0.2/makeca -trsa -b1024 100
+         ./makecerts.sh
+         
+      Now you should have a subdirectory 'ca' with a CA master key
+      (cakey.pem), a self-signed CA certificate (cacert.pem),
+      as well as 100 node certificates and 100 keypairs.
+
+   4. Set up the experiment
+   
+         ./scripts/makedirs-esm.sh
+
+      This should generate a directory called 'peerreview' with
+      100 subdirectories, one for each node, as well as a config
+      file called 'multicast.param'.
+
+   5. Run the experiment
+   
+         ./multicast-sim multicast.param
+
+      This will run all 100 nodes in a simulator, where they are
+      connected by virtual links. You can also run 'multicast-inet'
+      to use actual TCP/IP connections (in this case, please edit
+      the IP addresses in multicast.param; you may want to use
+      fewer nodes, too!). While the application runs, it prints
+      the current 'virtual time' to stdout to show progress;
+      the experiment terminates automatically after 100 virtual
+      seconds. After the experiment, the directory will contain
+      detailed log files (sim-10.0.0.*.log) that show what each
+      node has done.
+         
+   6. You will need to delete the peerreview/ directory and repeat
+      step 4 before you can run the experiment again.
+      
+For more information, please visit http://peerreview.mpi-sws.org/,
+or contact Andreas Haeberlen <ahae@mpi-sws.org>.

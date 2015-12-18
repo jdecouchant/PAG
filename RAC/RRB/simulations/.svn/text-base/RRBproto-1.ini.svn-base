@@ -1,0 +1,271 @@
+[General]
+#network = Rand1
+network = NClients
+cmdenv-event-banners = false
+cmdenv-module-messages = false
+cmdenv-performance-display = true
+cmdenv-status-frequency = 1s
+experiment-label = ${configname}
+fname-append-host = false
+parallel-simulation = false
+print-undisposed = false
+#warmup-period = 1s
+#warmup-period = 0s
+sim-time-limit = 1.5s
+#tkenv-default-run = 2 
+total-stack = 7MiB
+tkenv-plugin-path = ./plugins
+num-rngs = 100
+#seed-0-mt = 12
+#seed-1-mt = 9
+#seed-2-mt = 7
+record-eventlog = false
+warnings = false
+**.cmdenv-ev-output = false
+**.module-eventlog-recording = false
+*.result-recording-modes = -
+#**.result-recording-modes = all
+**.scalar-recording = false
+**.vector-record-eventnumbers = false
+**.vector-recording = false
+#cmd config
+cmdenv-express-mode = true
+cmdenv-interactive = false
+
+# tcp settings                                                                                                                                                                
+
+**.param-record-as-scalar = false
+**.tcp.sendQueueClass = "TCPMsgBasedSendQueue"
+**.tcp.receiveQueueClass = "TCPMsgBasedRcvQueue"
+**.tcp.tcpAlgorithmClass = "TCPNewReno"
+**.tcp.increasedIWEnabled = true
+**.tcp.windowScalingSupport = true
+#**.tcp.mss = 1000
+**.tcp.mss = 1460
+**.tcp.advertisedWindow = 33000
+
+#
+
+# tcp apps
+#**.numTcpApps = 1
+
+**.client[*].testType = "Test"
+**.client[*].Test.startTime = 0.00009s
+**.client[*].Test.nbSender = 1
+**.client[*].Test.msgSize = 10000
+**.client[*].RRBType = "RRBproto"
+**.client[*].RRB.port = 1000
+**.client[*].RRB.connectAddress =""
+**.client[*].RRB.connectPort = 1001
+
+*.numRouters = 2
+*.hostsPerRouter = 25
+
+**.client[*].RRB.nbNodes = 50
+**.client[*].RRB.t = 1
+
+# NIC configuration
+#**.ppp[*].queueType = "DropTailQueue" # in routers
+#**.ppp[*].queue.frameCapacity = 10  # in routers
+
+#*.configurator.networkAddress = "10.0.0.0"
+#*.configurator.networkAddress = "192.168.1.0"
+
+# Ethernet NIC configuration
+#**.eth[*].mac.txrate = 1Gbps
+#**.eth[*].mac.duplexEnabled = true
+
+# Queues
+**.ppp[*].queueType = "DropTailQueue"
+**.ppp[*].queue.frameCapacity = 14000
+**.eth[*].queueType = "DropTailQueue"
+**.eth[*].queue.frameCapacity = 14000
+
+# Ethernet switch
+#**.switch[*].relayUnitType = "MACRelayUnitNP"
+#**.relayUnit.addressTableSize = 100
+#**.relayUnit.agingTime = 120s
+#**.relayUnit.bufferSize = 1GiB
+#**.relayUnit.highWatermark = 512KiB
+#**.relayUnit.pauseUnits = 300  # pause for 300*512 bit (19200 byte) time
+#**.relayUnit.addressTableFile = ""
+#**.relayUnit.numCPUs = 2
+#**.relayUnit.processingTime = 0.01us
+#
+#**.mac[*].txrate = 0   # autoconfig
+#**.mac[*].duplexEnabled = true
+#**.mac[*].txQueueLimit = 2000
+#**.ext[*].mtu = 1500
+#**.mac[*].mtu = 1500
+
+#############################
+## Ethernet NIC configuration
+#**.eth[*].mac.txrate = 1Gbps
+#**.eth[*].mac.duplexEnabled = true
+## Queues
+##**.ppp[*].queueType = "DropTailQueue"
+##**.ppp[*].queueType = "DropTailQoSQueue"
+##**.ppp[*].queue.frameCapacity = 14000
+#
+#**.eth[*].queueType = "DropTailQueue"
+#**.eth[*].queue.frameCapacity = 14000
+#
+## Ethernet switch
+#
+#**.switch*.relayUnitType = "MACRelayUnitNP"
+#**.relayUnit.addressTableSize = 100
+#**.relayUnit.agingTime = 120s
+#**.relayUnit.bufferSize = 1GiB
+#**.relayUnit.highWatermark = 512KiB
+#**.relayUnit.pauseUnits = 300  # pause for 300*512 bit (19200 byte) time
+#**.relayUnit.addressTableFile = ""
+#**.relayUnit.numCPUs = 2
+#**.relayUnit.processingTime = 0.1us
+#**.mac[*].txrate = 0   # autoconfig
+#**.mac[*].duplexEnabled = true
+#
+#**.ext[*].mtu = 1500
+#**.mac[*].mtu = 1500
+#############################
+
+[Config one]
+*.numRouters = 1
+*.hostsPerRouter = 10
+**.client[*].RRB.nbNodes = 10
+#
+[Config two]
+*.numRouters = 1
+*.hostsPerRouter = 20
+**.client[*].RRB.nbNodes = 20
+
+[Config three]
+*.numRouters = 1
+*.hostsPerRouter = 30
+**.client[*].RRB.nbNodes = 30
+
+[Config four] 
+*.numRouters = 1
+*.hostsPerRouter = 40  
+**.client[*].RRB.nbNodes = 40
+
+[Config five]
+*.numRouters = 1
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 50
+
+[Config six]
+*.numRouters = 2
+*.hostsPerRouter = 30
+**.client[*].RRB.nbNodes = 60
+
+[Config seven]
+*.numRouters = 2
+*.hostsPerRouter = 35
+**.client[*].RRB.nbNodes = 70
+
+[Config eight]
+*.numRouters = 4
+*.hostsPerRouter = 20
+**.client[*].RRB.nbNodes = 80
+
+[Config nine]
+*.numRouters = 3
+*.hostsPerRouter = 30
+**.client[*].RRB.nbNodes = 90
+
+[Config ten]
+*.numRouters = 2
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 100
+
+[Config eleven]
+*.numRouters = 3
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 150
+
+[Config twelve]
+*.numRouters = 4
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 200
+
+[Config thirteen]
+*.numRouters = 5
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 250
+
+[Config fourteen]
+*.numRouters = 6
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 300
+
+[Config fifteen]
+*.numRouters = 7
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 350
+
+[Config sixteen]
+*.numRouters = 8
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 400
+
+[Config seventeen]
+*.numRouters = 9
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 450
+
+[Config eighteen]
+*.numRouters = 10
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 500
+
+[Config nineteen]
+*.numRouters = 11
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 550
+
+[Config twenty]
+*.numRouters = 12
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 600
+
+[Config twenty_one]
+*.numRouters = 13
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 650
+
+[Config twenty_two]
+*.numRouters = 14
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 700
+
+[Config twenty_three]
+*.numRouters = 15
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 750
+
+[Config twenty_four]
+*.numRouters = 16
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 800
+
+[Config twenty_five]
+*.numRouters = 17
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 850
+
+[Config twenty_six]
+*.numRouters = 18
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 900
+
+[Config twenty_seven]
+*.numRouters = 19
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 950
+
+[Config twenty_eight]
+*.numRouters = 20
+*.hostsPerRouter = 50
+**.client[*].RRB.nbNodes = 1000
+
+

@@ -1,0 +1,6 @@
+Pour tester le protocole RRB, il faut:
+- importer le projet INET
+- créer un projet OMNET++ dans l'IDE  nommé RRB et qui dépend de INET
+- copier les fichiers qui sont dans src dans le répertoire src de ton projet RRB
+- copier les fichiers qui sont dans simulations dans le répertoire simulations de ton projet RRB   
+- compiler et exécuter 

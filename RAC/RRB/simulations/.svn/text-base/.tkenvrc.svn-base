@@ -1,0 +1,4 @@
+# Partial Tkenv config file -- see $HOME/.tkenvrc as well
+inspector "NClients" "NClients" "2" "627x283+5+27:normal"
+inspector "Net" "Net" "2" "627x283+47+73:normal"
+
